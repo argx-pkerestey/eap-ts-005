@@ -1,0 +1,13 @@
+[project]
+name = "run-laya-in-docker"
+version = "0.1.0"
+description = "An HTTP sentiment agent using Laya through Ollaya"
+readme = "README.md"
+authors = [
+    { name = "Pavlo Kerestey", email = "pavlo@kerestey.net" }
+]
+requires-python = ">=3.15"
+dependencies = []
+
+[tool.uv]
+package = false
