@@ -1,0 +1,6 @@
+.git
+.jj
+**/.DS_Store
+laya-fine-tuned/data
+laya-fine-tuned/models
+**/__pycache__/

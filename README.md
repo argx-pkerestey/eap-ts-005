@@ -48,3 +48,26 @@ just run-lib "I love the design, but the service was terrible."
 
 `torch` is pinned to PyTorch's CPU-only index to avoid ~3 GB of CUDA wheels.
 Run `just lock` (uv inside Docker) after changing dependencies.
+
+## Fine-tuning laya (`laya-fine-tuned/`)
+
+Teaches laya to judge blood sugar readings ("…got 40" → `sugar levels too low`).
+Unitless readings are treated as mg/dL: <70 low, 70–180 OK, >180 high (mmol/L
+is converted when stated).
+
+```sh
+just tune                                          # 3 epochs -> models/glucose   (held-out acc 0.85)
+just tune-more models/glucose models/glucose-2 3   # 3 more   -> models/glucose-2 (held-out acc 0.99)
+just tune-predict models/glucose-2                 # "...got 40" -> too low, p=0.9996
+just tune-predict models/glucose-2 "My sugar is 45 mg/dL"
+```
+
+- `question.py` is the question used for training **and** inference; the model
+  is tuned on its exact wording and options, so keep them identical.
+- `gen_data.py` writes 2000 train / 300 eval rows (the target sentence is
+  deliberately left out of training).
+- `train.py` calls `laya.train.finetune` (the library behind `laya-train`).
+  The base model is ModernBERT-large (~400M params); full fine-tuning does not
+  fit in Docker's ~8 GB, so only the top 8 encoder layers and the decision head
+  are trained. Training only the head was not enough (accuracy 0.41).
+- On CPU an epoch takes ~40 min. Load a result with `laya.load("laya-fine-tuned/models/glucose-2")`.
