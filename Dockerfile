@@ -10,7 +10,7 @@ RUN apt-get update \
 RUN ollaya pull laya:latest
 
 WORKDIR /app
-COPY .python-version pyproject.toml uv.lock agent.py run-agent.sh ./
+COPY laya-as-lib-dependency laya-as-agent-api pyproject.toml uv.lock run-agent.sh ./
 
 EXPOSE 8080
-ENTRYPOINT ["sh", "/app/run-agent.sh"]
+ENTRYPOINT "/bin/bash"
