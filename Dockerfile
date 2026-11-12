@@ -8,9 +8,11 @@ RUN apt-get update \
     && rm /tmp/install-ollaya.sh
 
 RUN ollaya pull laya:latest
+EXPOSE 8080
+
+COPY . /app/
 
 WORKDIR /app
-COPY laya-as-lib-dependency laya-as-agent-api pyproject.toml uv.lock run-agent.sh ./
+RUN uv sync
 
-EXPOSE 8080
-ENTRYPOINT "/bin/bash"
+ENTRYPOINT ["/bin/bash"]

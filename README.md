@@ -35,3 +35,16 @@ timeouts (60 seconds), and incomplete upstream responses return HTTP 502 with
 an `OLLAYA_UNAVAILABLE` JSON error containing the exception details. Invalid
 UTF-8 or an empty body returns HTTP 400; missing Content-Length returns 411.
 Chunked request bodies are not supported.
+## Laya as a library (no HTTP)
+
+`laya-as-lib-dependency/main.py` imports the `laya` Python package and runs the
+model in-process (`laya.load(...)` + `agent.predict(state, questions)`), with no
+Ollaya server. The checkpoint is downloaded from Hugging Face on first use.
+
+```sh
+just run-lib "I love the design, but the service was terrible."
+# Negative {'Positive': 0.0169, 'Negative': 0.9831}
+```
+
+`torch` is pinned to PyTorch's CPU-only index to avoid ~3 GB of CUDA wheels.
+Run `just lock` (uv inside Docker) after changing dependencies.

@@ -7,7 +7,19 @@ authors = [
     { name = "Pavlo Kerestey", email = "pavlo@kerestey.net" }
 ]
 requires-python = ">=3.15"
-dependencies = []
+dependencies = [
+    "laya",
+    "torch",
+]
 
 [tool.uv]
 package = false
+
+# CPU-only torch: the container has no GPU, and PyPI's Linux wheels pull ~3 GB of CUDA libraries.
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
