@@ -1,4 +1,7 @@
+"""agent.py QUESTIONS_JSON -- HTTP agent on :8080 asking Ollaya the given questions."""
 import json
+import os
+import sys
 from http.client import HTTPException
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.error import HTTPError, URLError
@@ -6,16 +9,9 @@ from urllib.request import ProxyHandler, Request, build_opener
 
 
 OLLAYA_URL = "http://127.0.0.1:11435/api/decide"
-QUESTIONS = {
-    "sentiment": {
-        "type": "choice",
-        "instructions": "What sentiment does this text express?",
-        "criteria": {
-            "Positive": "The text expresses positive sentiment", 
-            "Negative": "The text expresses negative sentiment",
-        },
-    },
-}
+OLLAYA_MODEL = os.environ.get("OLLAYA_MODEL", "laya:latest")
+# Set from the command line: the justfile passes the same questions as to the library examples.
+QUESTIONS = None
 
 
 class AgentHandler(BaseHTTPRequestHandler):
@@ -69,7 +65,7 @@ class AgentHandler(BaseHTTPRequestHandler):
         request = Request(
             OLLAYA_URL,
             data=json.dumps(
-                {"model": "laya:latest", "state": state, "questions": QUESTIONS}
+                {"model": OLLAYA_MODEL, "state": state, "questions": QUESTIONS}
             ).encode("utf-8"),
             headers={"Content-Type": "application/json"},
             method="POST",
@@ -96,6 +92,9 @@ class AgentHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        raise SystemExit("usage: agent.py QUESTIONS_JSON")
+    QUESTIONS = json.loads(sys.argv[1])
     with ThreadingHTTPServer(("0.0.0.0", 8080), AgentHandler) as server:
-        print("Listening on 0.0.0.0:8080", flush=True)
+        print(f"Listening on 0.0.0.0:8080 (Ollaya model {OLLAYA_MODEL})", flush=True)
         server.serve_forever()

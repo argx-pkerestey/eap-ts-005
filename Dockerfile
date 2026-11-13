@@ -15,4 +15,7 @@ COPY . /app/
 WORKDIR /app
 RUN uv sync
 
+# models/ is mounted from the repo: Hugging Face downloads and fine-tuned checkpoints live there.
+ENV HF_HOME=/app/models/huggingface
+
 ENTRYPOINT ["/bin/bash"]

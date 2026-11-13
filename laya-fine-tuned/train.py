@@ -1,9 +1,15 @@
-"""train.py [base] [out] [epochs] -- fine-tune on data/train.jsonl (CPU, ~8 GB RAM).
+"""train.py BASE OUT EPOCHS QUESTIONS_JSON -- generate the data set, then fine-tune (CPU, ~8 GB RAM).
 
-Pass a previous output as `base` to keep training it.
+Run from /app: checkpoint paths such as models/glucose are relative to it. Pass a previous
+output as BASE to keep training it. The data set is regenerated each run (seeded, so identical)
+with the given question, which the model is then trained on.
 """
 import os
 import sys
+from pathlib import Path
+
+import gen_data
+import question
 
 os.environ.setdefault("USE_TF", "0")
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
@@ -33,8 +39,14 @@ def load_partially_frozen(model_dir):
 
 laya.train.load_checkpoint = load_partially_frozen
 
+if len(sys.argv) != 5:
+    sys.exit("usage: train.py BASE OUT EPOCHS QUESTIONS_JSON")
+base, out, epochs, questions = sys.argv[1], sys.argv[2], int(sys.argv[3]), question.parse(sys.argv[4])
+DATA = Path(__file__).parent / "data"
+gen_data.write_all(DATA, questions)
+
 config = TrainConfig(
-    epochs=int(sys.argv[3]) if len(sys.argv) > 3 else 3,
+    epochs=epochs,
     micro_batch=4,
     grad_accum=4,
     loss="soft-ce",
@@ -42,8 +54,6 @@ config = TrainConfig(
     head_lr=2e-4,
     shuffle_options=("choice",),  # stops the model learning "first/last option" shortcuts
     gradient_checkpointing=True,
-    eval_data="data/eval.jsonl",
+    eval_data=str(DATA / "eval.jsonl"),
 )
-base = sys.argv[1] if len(sys.argv) > 1 else "convaiinnovations/laya"
-out = sys.argv[2] if len(sys.argv) > 2 else "models/glucose"
-finetune("data/train.jsonl", base, out, config, device="cpu")
+finetune(str(DATA / "train.jsonl"), base, out, config, device="cpu")

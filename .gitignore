@@ -1,4 +1,4 @@
 laya-fine-tuned/data/
-laya-fine-tuned/models/
+models/
 laya-fine-tuned/*.log
 __pycache__/

@@ -1,3 +1,9 @@
+"""main.py MODEL QUESTIONS_JSON TEXT... -- answer questions about a text with laya in-process.
+
+MODEL is a Hugging Face id (e.g. convaiinnovations/laya) or a local checkpoint directory
+(e.g. models/glucose-2), so the same runner serves the original and the fine-tuned model.
+"""
+import json
 import os
 import sys
 
@@ -7,19 +13,10 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
 import laya  # noqa: E402
 
-QUESTIONS = {
-    "sentiment": {
-        "type": "choice",
-        "instructions": "What sentiment does this text express?",
-        "criteria": {
-            "Positive": "The text expresses positive sentiment",
-            "Negative": "The text expresses negative sentiment",
-        },
-    },
-}
-
 if __name__ == "__main__":
-    state = " ".join(sys.argv[1:]) or "I love the design, but the service was terrible."
-    agent = laya.load("convaiinnovations/laya")  # downloaded from Hugging Face on first use
-    answer = agent.predict(state, QUESTIONS)["answers"]["sentiment"]
-    print(answer["choice"], answer["probabilities"])
+    if len(sys.argv) < 4:
+        raise SystemExit("usage: main.py MODEL QUESTIONS_JSON TEXT...")
+    model, questions, state = sys.argv[1], json.loads(sys.argv[2]), " ".join(sys.argv[3:])
+    agent = laya.load(model)  # a Hugging Face id is downloaded on first use
+    for qid, answer in agent.predict(state, questions)["answers"].items():
+        print(f"{qid}: {answer['choice']}  {answer['probabilities']}")
