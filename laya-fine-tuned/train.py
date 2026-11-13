@@ -42,6 +42,12 @@ laya.train.load_checkpoint = load_partially_frozen
 if len(sys.argv) != 5:
     sys.exit("usage: train.py BASE OUT EPOCHS QUESTIONS_JSON")
 base, out, epochs, questions = sys.argv[1], sys.argv[2], int(sys.argv[3]), question.parse(sys.argv[4])
+try:
+    laya.train.resolve_checkpoint_dir(base)  # code runs offline: the base must already be on disk
+except FileNotFoundError:
+    if base.startswith((".", "/", "models/")):
+        sys.exit(f"Checkpoint {base} not found. Create it with `just tune` first.")
+    sys.exit(f"Model {base} is not in models/huggingface/. Download it with `just fetch-models`.")
 DATA = Path(__file__).parent / "data"
 gen_data.write_all(DATA, questions)
 

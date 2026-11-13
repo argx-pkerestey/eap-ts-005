@@ -18,6 +18,7 @@ RUN uv sync --locked
 COPY . ./
 
 # models/ is mounted from the repo: Hugging Face downloads and fine-tuned checkpoints live there.
-ENV HF_HOME=/app/models/huggingface
+# Code runs offline and expects its models there; only `just fetch-models` goes online.
+ENV HF_HOME=/app/models/huggingface HF_HUB_OFFLINE=1
 
 ENTRYPOINT ["/bin/bash"]
