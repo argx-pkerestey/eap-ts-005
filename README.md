@@ -12,39 +12,43 @@ runs inside the `laya-agent` image, which every recipe builds first. Run `just` 
 ```
 ❱ just
 Available recipes:
-    [1 original laya, as a library]
+    [1 base laya, as a library]
     # Sentiment of a text, with laya running inside the Python process
     run-lib text=sentiment_text questions=sentiment_questions
 
-    [2 original laya, served by Ollaya]
-    run-agent questions=sentiment_questions         # Serve the sentiment agent on :8080 (Ollaya model laya:latest); Ctrl-C to stop
-    query-agent text=sentiment_text                 # Ask the agent from `just run-agent` for the sentiment of a text
+    [2 base laya, served by Ollaya]
+    run-laya-api                                       # Serve Ollaya's HTTP API on :11435 (base laya as laya:latest); Ctrl-C to stop
+    # Ask the API from `just run-laya-api` the sentiment question about a text
+    query-laya-api text=sentiment_text questions=sentiment_questions
 
-    [3 original laya misjudges a glucose reading]
-    # Judge a blood sugar reading with the original laya: 40 comes out as "OK"
-    run-lib-glucose-original text=glucose_text questions=glucose_questions
+    [3 base laya misjudges a glucose reading]
+    # Judge a blood sugar reading with the base laya: 40 comes out as "OK"
+    run-lib-glucose-base text=glucose_text questions=glucose_questions
 
     [4 fine-tuned laya, as a library]
     # Judge the same reading with the fine-tuned checkpoint: 40 comes out as "too low"
     run-lib-glucose-finetuned text=glucose_text questions=glucose_questions
 
     [5 fine-tuned laya, served by Ollaya]
-    run-agent-finetuned questions=glucose_questions # Serve the glucose agent on :8080 (fine-tuned checkpoint imported into Ollaya as laya-glucose)
-    query-agent-finetuned text=glucose_text         # Ask the agent from `just run-agent-finetuned` to judge a blood sugar reading
+    run-laya-api-finetuned questions=glucose_questions # Serve Ollaya's HTTP API on :11435 with the fine-tuned checkpoint imported as laya-glucose
+    # Ask the API from `just run-laya-api-finetuned` the glucose question about a text
+    query-laya-api-finetuned text=glucose_text questions=glucose_questions
 
     [fine-tuning]
-    tune questions=glucose_questions                # Fine-tune the original laya for 3 epochs into models/glucose (~2 h on CPU)
+    tune questions=glucose_questions                   # Fine-tune the base laya for 3 epochs into models/glucose (~2 h on CPU)
     # Keep training a checkpoint, e.g. `just tune-more models/glucose models/glucose-2 3`
     tune-more base out epochs="3" questions=glucose_questions
 
     [setup]
-    lock                                            # Re-lock dependencies after changing pyproject.toml (uv runs inside Docker)
-    build                                           # Build the laya-agent image
-    run-bare-container                              # Open a shell in the image
+    lock                                               # Re-lock dependencies after changing pyproject.toml (uv runs inside Docker)
+    build                                              # Build the laya-agent image
+    run-bare-container                                 # Open a shell in the image
 ```
 
 
-Recipes take an optional text, and the questions asked are the 
+Examples 2 and 5 serve Ollaya's API on `localhost:11435` (`run-laya-api*`, Ctrl-C to stop); run
+the matching `query-laya-api*` recipe in another terminal. Recipes take an optional text, and
+the questions asked are the 
 `sentiment_questions` / `glucose_questions` variables at the top of the `justfile`.
 
 ## Models, fine-tuning and structure
@@ -54,7 +58,7 @@ downloads in `models/huggingface/`, fine-tuned checkpoints in `models/glucose*`.
 models are pulled into the image when it is built. Fine-tuning runs on CPU, ~40 min per epoch:
 
 ```sh
-just tune                                          # original laya, 3 epochs -> models/glucose
+just tune                                          # base laya, 3 epochs -> models/glucose
 just tune-more models/glucose models/glucose-2 3   # 3 more epochs           -> models/glucose-2
 ```
 
@@ -62,8 +66,8 @@ just tune-more models/glucose models/glucose-2 3   # 3 more epochs           -> 
 justfile                 the examples, questions, models and fine-tuning recipes
 Dockerfile               Python 3.15 + uv + Ollaya image
 laya-as-lib-dependency/  main.py: laya as a library (examples 1, 3, 4)
-laya-as-agent-api/       agent.py: HTTP agent on :8080 in front of Ollaya (examples 2, 5)
 laya-fine-tuned/         gen_data.py, train.py: synthetic data and fine-tuning;
-                         ollaya_import.py: serve a fine-tuned checkpoint with Ollaya (example 5)
+                         run-api-finetuned.sh, ollaya_import.py: serve a fine-tuned
+                         checkpoint with Ollaya (example 5)
 models/                  Hugging Face cache and fine-tuned models. The models are not committed or pushed.
 ```

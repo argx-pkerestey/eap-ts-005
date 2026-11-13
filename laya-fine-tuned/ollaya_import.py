@@ -114,4 +114,6 @@ for layer in manifest["layers"]:
         point_layer(layer, add_blob(partial))
 
 manifest_path.write_text(json.dumps(manifest, indent=2))
+# A request between `ollaya create` and here would have loaded the unpatched model: unload it.
+subprocess.run(["ollaya", "stop", name], capture_output=True)
 print(f"{name}: weights from {checkpoint} (sha256:{weights[:12]})", flush=True)

@@ -4,3 +4,4 @@
 laya-fine-tuned/data
 models
 **/__pycache__/
+laya-fine-tuned/*.log

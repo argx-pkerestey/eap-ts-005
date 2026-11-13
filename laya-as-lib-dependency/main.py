@@ -1,7 +1,7 @@
 """main.py MODEL QUESTIONS_JSON TEXT... -- answer questions about a text with laya in-process.
 
 MODEL is a Hugging Face id (e.g. convaiinnovations/laya) or a local checkpoint directory
-(e.g. models/glucose-2), so the same runner serves the original and the fine-tuned model.
+(e.g. models/glucose-2), so the same runner serves the base and the fine-tuned model.
 """
 import json
 import os
